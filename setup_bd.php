@@ -45,6 +45,10 @@ $sqlProductos = "CREATE TABLE IF NOT EXISTS `productos` (
     `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 $conn->query($sqlProductos);
+// Asegurar columnas si la tabla ya existía previamente
+$conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `visible` TINYINT(1) NOT NULL DEFAULT 1");
+$conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `etiqueta` VARCHAR(50) NULL");
+$conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP");
 
 // 4. Crear tabla valoraciones
 $sqlValoraciones = "CREATE TABLE IF NOT EXISTS `valoraciones` (

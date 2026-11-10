@@ -45,6 +45,25 @@ $adminNombre = $_SESSION["usuario"] ?? "Admin";
             align-items: center;
             gap: 12px;
         }
+        .admin-logo-wrapper {
+            background: #FFF5F3;
+            padding: 4px 10px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+            text-decoration: none;
+        }
+        .admin-logo-wrapper:hover {
+            transform: scale(1.04);
+        }
+        .admin-logo-img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
         .admin-brand h1 {
             font-size: 20px;
             font-weight: 700;
@@ -452,7 +471,9 @@ $adminNombre = $_SESSION["usuario"] ?? "Admin";
     <!-- Header -->
     <header class="admin-header">
         <div class="admin-brand">
-            <h1>Michell Store</h1>
+            <a href="index.php" class="admin-logo-wrapper" title="Ir a la tienda">
+                <img src="fts/logo.png" alt="Morena Store" class="admin-logo-img">
+            </a>
             <span>ADMINISTRACIÓN</span>
         </div>
         <div class="admin-nav">

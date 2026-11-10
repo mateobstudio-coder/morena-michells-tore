@@ -60,8 +60,14 @@ $conexion->close();
 
     <title>
         <?php echo htmlspecialchars($producto["nombre"]); ?>
-        - Michell Store
+        - Morena Store
     </title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="fts/favicon.png"
+    >
 
     <link
         rel="stylesheet"
@@ -79,41 +85,73 @@ $conexion->close();
             display: grid !important;
             grid-template-columns: 50px 1fr 50px !important;
             align-items: center !important;
-            padding: 10px 15px !important;
+            padding: 8px 15px !important;
             position: sticky !important;
             top: 0 !important;
             z-index: 100 !important;
-            height: 65px !important;
+            height: 72px !important;
             box-sizing: border-box !important;
             transition: transform 0.3s ease, opacity 0.3s ease !important;
         }
 
         .header-detalle .header-back-btn {
             position: static !important;
-            width: 42px !important;
-            height: 42px !important;
+            transform: none !important;
+            width: 44px !important;
+            height: 44px !important;
             margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 22px !important;
+            border-radius: 12px !important;
+            background: #8B2635 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(139, 38, 53, 0.25) !important;
         }
 
-        .header-detalle .header-title {
-            text-align: center !important;
-            margin: 0 !important;
-            font-size: 20px !important;
-            font-weight: 700 !important;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .header-detalle .header-back-btn:hover {
+            background: #6F1D2A !important;
+            transform: scale(1.06) !important;
+        }
+
+        .header-detalle .logo-link {
+            justify-self: center !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            padding: 0 !important;
+        }
+
+        .header-detalle .logo-img {
+            height: 50px !important;
+            max-height: 54px !important;
+            width: auto !important;
+            max-width: 190px !important;
+            object-fit: contain !important;
+            display: block !important;
         }
 
         .header-detalle .header-cart-btn {
             position: static !important;
+            transform: none !important;
             width: auto !important;
-            height: 42px !important;
+            height: 44px !important;
             margin: 0 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 20px !important;
+            background: #8B2635 !important;
+            color: white !important;
+            padding: 8px 14px !important;
+            box-shadow: 0 2px 8px rgba(139, 38, 53, 0.25) !important;
+        }
+
+        .header-detalle .header-cart-btn:hover {
+            background: #6F1D2A !important;
+            transform: scale(1.06) !important;
         }
 
         /* Hover effects en botones */
@@ -182,15 +220,19 @@ $conexion->close();
         ←
     </button>
 
-    <h1 class="logo header-title" onclick="window.location.href='index.php'">
-        Michell Store
-    </h1>
+    <a href="index.php" class="logo-link" aria-label="Morena Store - Volver al inicio">
+        <img
+            src="fts/logo.png"
+            alt="Morena Store"
+            class="logo-img"
+        >
+        <span class="logo-seo-text">Morena Store</span>
+    </a>
 
     <button
         id="cart-btn"
         class="cart-btn header-cart-btn"
         type="button"
-        onclick="window.location.href='index.php'"
         aria-label="Ver carrito"
     >
         🛒
@@ -510,9 +552,59 @@ $conexion->close();
 
 </main>
 
+<!-- ==================================================
+     CARRITO MODAL
+================================================== -->
+<div
+  id="cart-modal"
+  class="cart-modal"
+>
+  <div class="cart-content">
+    <button
+      id="close-cart"
+      class="modal-close"
+      type="button"
+      aria-label="Cerrar carrito"
+    >
+      ✕
+    </button>
+
+    <h3>
+      🛒 Carrito de Compras
+    </h3>
+
+    <div id="cart-items"></div>
+
+    <p id="cart-quantity">
+      Productos: 0
+    </p>
+
+    <p id="cart-total">
+      Total: $0
+    </p>
+
+    <button
+      id="buy-cart"
+      class="buy-btn"
+      type="button"
+    >
+      💳 Pagar con Mercado Pago / Tarjetas
+    </button>
+  </div>
+</div>
+
 <div id="notificaciones"></div>
 
 <script>
+// ==================================================
+// VARIABLES Y ESTADO DEL CARRITO
+// ==================================================
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+function guardarCarrito() {
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
 // ==================================================
 // OCULTAR HEADER AL BAJAR / MOSTRAR AL SUBIR
 // ==================================================
@@ -592,18 +684,208 @@ function mostrarNotificacion(mensaje, tipo = "success") {
 function actualizarContadorHeader() {
     const cartCount = document.getElementById("cart-count");
     if (!cartCount) return;
-    const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
     const totalCantidad = carrito.reduce((acc, item) => acc + (item.cantidad || 1), 0);
     cartCount.textContent = totalCantidad;
 }
 
-actualizarContadorHeader();
+// ==================================================
+// ACTUALIZAR CONTENIDO DEL MODAL DEL CARRITO
+// ==================================================
+function actualizarCarrito() {
+    const cartItems = document.getElementById("cart-items");
+    const cartTotal = document.getElementById("cart-total");
+    const cartCount = document.getElementById("cart-count");
+    const cartQuantity = document.getElementById("cart-quantity");
+
+    if (!cartItems || !cartTotal || !cartCount || !cartQuantity) return;
+
+    cartItems.innerHTML = "";
+    let total = 0;
+    let cantidadTotal = 0;
+
+    if (carrito.length === 0) {
+        cartItems.innerHTML = `
+            <div class="cart-empty">
+                <div>🛒</div>
+                <p>Tu carrito está vacío.</p>
+            </div>
+        `;
+    } else {
+        carrito.forEach(producto => {
+            const subtotal = Number(producto.precio) * producto.cantidad;
+            total += subtotal;
+            cantidadTotal += producto.cantidad;
+
+            const item = document.createElement("div");
+            item.classList.add("cart-item");
+            item.innerHTML = `
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="cart-item-image">
+                <div class="cart-item-info">
+                    <strong>${producto.nombre}</strong>
+                    <span>$${Number(producto.precio).toLocaleString()}</span>
+                    <div class="quantity-controls">
+                        <button onclick="disminuirCantidad(${producto.id})" type="button">−</button>
+                        <span>${producto.cantidad}</span>
+                        <button onclick="aumentarCantidad(${producto.id})" type="button">+</button>
+                    </div>
+                </div>
+                <div class="cart-item-right">
+                    <strong>$${subtotal.toLocaleString()}</strong>
+                    <button class="remove-cart-item" onclick="eliminarProductoCarrito(${producto.id})" type="button" aria-label="Eliminar producto">🗑️</button>
+                </div>
+            `;
+            cartItems.appendChild(item);
+        });
+    }
+
+    cartTotal.textContent = `Total: $${total.toLocaleString()}`;
+    cartQuantity.textContent = `Productos: ${cantidadTotal}`;
+    cartCount.textContent = cantidadTotal;
+
+    cartCount.classList.remove("cart-count-animation");
+    void cartCount.offsetWidth;
+    cartCount.classList.add("cart-count-animation");
+}
+
+function aumentarCantidad(id) {
+    const producto = carrito.find(p => Number(p.id) === Number(id));
+    if (producto) {
+        producto.cantidad = (producto.cantidad || 1) + 1;
+        guardarCarrito();
+        actualizarCarrito();
+    }
+}
+
+function disminuirCantidad(id) {
+    const producto = carrito.find(p => Number(p.id) === Number(id));
+    if (producto) {
+        if (producto.cantidad > 1) {
+            producto.cantidad--;
+        } else {
+            carrito = carrito.filter(p => Number(p.id) !== Number(id));
+        }
+        guardarCarrito();
+        actualizarCarrito();
+    }
+}
+
+function eliminarProductoCarrito(id) {
+    const producto = carrito.find(p => Number(p.id) === Number(id));
+    carrito = carrito.filter(p => Number(p.id) !== Number(id));
+    guardarCarrito();
+    actualizarCarrito();
+
+    if (producto) {
+        mostrarNotificacion(`"${producto.nombre}" fue eliminado del carrito.`, "info");
+    }
+}
+
+// ==================================================
+// CONTROL DE MODALES (ABRIR / CERRAR)
+// ==================================================
+function abrirModal(modal) {
+    if (!modal) return;
+    modal.style.display = "flex";
+    requestAnimationFrame(() => {
+        modal.classList.add("modal-visible");
+    });
+}
+
+function cerrarModal(modal) {
+    if (!modal) return;
+    modal.classList.remove("modal-visible");
+    setTimeout(() => {
+        modal.style.display = "none";
+    }, 250);
+}
+
+// ==================================================
+// EVENTOS DEL CARRITO
+// ==================================================
+const cartBtn = document.getElementById("cart-btn");
+const cartModal = document.getElementById("cart-modal");
+const closeCart = document.getElementById("close-cart");
+const buyCart = document.getElementById("buy-cart");
+
+if (cartBtn && cartModal) {
+    cartBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        actualizarCarrito();
+        abrirModal(cartModal);
+    });
+}
+
+if (closeCart && cartModal) {
+    closeCart.addEventListener("click", (e) => {
+        e.preventDefault();
+        cerrarModal(cartModal);
+    });
+}
+
+if (cartModal) {
+    window.addEventListener("click", (e) => {
+        if (e.target === cartModal) {
+            cerrarModal(cartModal);
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            cerrarModal(cartModal);
+        }
+    });
+}
+
+if (buyCart) {
+    buyCart.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        if (carrito.length === 0) {
+            mostrarNotificacion("El carrito está vacío.", "info");
+            return;
+        }
+
+        buyCart.disabled = true;
+        const textoOriginal = buyCart.innerHTML;
+        buyCart.innerHTML = "Conectando con Mercado Pago... ⏳";
+
+        try {
+            const respuesta = await fetch("crear_preferencia.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    items: carrito
+                })
+            });
+
+            const resultado = await respuesta.json();
+
+            if (resultado.success && resultado.init_point) {
+                mostrarNotificacion("Redirigiendo a Mercado Pago seguro... 💳", "info");
+                setTimeout(() => {
+                    window.location.href = resultado.init_point;
+                }, 500);
+            } else {
+                mostrarNotificacion(resultado.message || "No se pudo iniciar el pago.", "error");
+                buyCart.disabled = false;
+                buyCart.innerHTML = textoOriginal;
+            }
+        } catch (err) {
+            console.error(err);
+            mostrarNotificacion("Error al conectar con la pasarela de pago.", "error");
+            buyCart.disabled = false;
+            buyCart.innerHTML = textoOriginal;
+        }
+    });
+}
 
 // ==================================================
 // AGREGAR AL CARRITO SIN SALIR DE LA PÁGINA
 // ==================================================
 function agregarProducto(id, nombre, precio, imagen) {
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    carrito = JSON.parse(localStorage.getItem("carrito")) || [];
     const existente = carrito.find(item => Number(item.id) === Number(id));
 
     if (existente) {
@@ -618,7 +900,7 @@ function agregarProducto(id, nombre, precio, imagen) {
         });
     }
 
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+    guardarCarrito();
 
     // Animación visual del botón
     const btn = document.querySelector(".detalle-carrito-btn");
@@ -633,8 +915,12 @@ function agregarProducto(id, nombre, precio, imagen) {
     }
 
     actualizarContadorHeader();
+    actualizarCarrito();
     mostrarNotificacion(`"${nombre}" fue agregado al carrito 🛒`, "cart");
 }
+
+actualizarContadorHeader();
+actualizarCarrito();
 </script>
 
 <script>

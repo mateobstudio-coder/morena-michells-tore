@@ -10,11 +10,17 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Michell Store</title>
+  <title>Morena Store</title>
+
+  <link
+    rel="icon"
+    type="image/png"
+    href="fts/favicon.png"
+  >
 
   <link
     rel="stylesheet"
-    href="style.css"
+    href="style.css?v=<?php echo time(); ?>"
   >
 
   <link
@@ -57,9 +63,18 @@
 
   <!-- LOGO -->
 
-  <h1 class="logo">
-    Michell Store
-  </h1>
+  <a
+    href="index.php"
+    class="logo-link"
+    aria-label="Morena Store - Inicio"
+  >
+    <img
+      src="fts/logo.png"
+      alt="Morena Store"
+      class="logo-img"
+    >
+    <h1 class="logo-seo-text">Morena Store</h1>
+  </a>
 
 
   <!-- CARRITO -->
@@ -109,7 +124,7 @@
   <div class="menu-header">
 
     <h2>
-      Michell Store
+      Morena Store
     </h2>
 
     <button

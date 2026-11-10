@@ -2542,3 +2542,9 @@ togglePasswords.forEach(
 actualizarEstadoUsuario();
 
 actualizarCarrito();
+
+// Abrir carrito si viene el parámetro ?abrir_carrito=1
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("abrir_carrito") === "1" && cartModal) {
+  abrirModal(cartModal);
+}
