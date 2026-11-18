@@ -26,8 +26,14 @@ $conn->select_db("michell_store");
 $sqlUsuarios = "CREATE TABLE IF NOT EXISTS `usuarios` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `usuario` VARCHAR(50) NOT NULL UNIQUE,
+    `email` VARCHAR(150) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `rol` ENUM('cliente', 'admin') NOT NULL DEFAULT 'cliente',
+    `pregunta_seguridad` VARCHAR(100) NULL,
+    `respuesta_seguridad` VARCHAR(255) NULL,
+    `indicio_password` VARCHAR(255) NULL,
+    `codigo_recuperacion` VARCHAR(10) NULL,
+    `codigo_expira` DATETIME NULL,
     `fecha_registro` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 $conn->query($sqlUsuarios);
@@ -49,6 +55,15 @@ $conn->query($sqlProductos);
 $conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `visible` TINYINT(1) NOT NULL DEFAULT 1");
 $conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `etiqueta` VARCHAR(50) NULL");
 $conn->query("ALTER TABLE `productos` ADD COLUMN IF NOT EXISTS `fecha_creacion` DATETIME DEFAULT CURRENT_TIMESTAMP");
+
+// Asegurar columnas de recuperación y email en usuarios
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `email` VARCHAR(150) NULL AFTER `usuario`");
+$conn->query("ALTER TABLE `usuarios` ADD UNIQUE KEY IF NOT EXISTS `uq_email` (`email`)");
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `pregunta_seguridad` VARCHAR(100) NULL AFTER `rol`");
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `respuesta_seguridad` VARCHAR(255) NULL AFTER `pregunta_seguridad`");
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `indicio_password` VARCHAR(255) NULL AFTER `respuesta_seguridad`");
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `codigo_recuperacion` VARCHAR(10) NULL AFTER `indicio_password`");
+$conn->query("ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `codigo_expira` DATETIME NULL AFTER `codigo_recuperacion`");
 
 // 4. Crear tabla valoraciones
 $sqlValoraciones = "CREATE TABLE IF NOT EXISTS `valoraciones` (
@@ -72,22 +87,24 @@ $sqlComentarios = "CREATE TABLE IF NOT EXISTS `comentarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 $conn->query($sqlComentarios);
 
-// 6. Insertar usuario Administrador por defecto si no existe
+// 6. Insertar o actualizar usuario Administrador por defecto
 $adminUser = "admin";
+$adminEmail = "mateobstudio@gmail.com";
 $adminPassPlain = "admin123";
 $adminHash = password_hash($adminPassPlain, PASSWORD_DEFAULT);
 
-$stmtCheckAdmin = $conn->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-$stmtCheckAdmin->bind_param("s", $adminUser);
+$stmtCheckAdmin = $conn->prepare("SELECT id FROM usuarios WHERE usuario = ? OR email = ?");
+$stmtCheckAdmin->bind_param("ss", $adminUser, $adminEmail);
 $stmtCheckAdmin->execute();
 $resAdmin = $stmtCheckAdmin->get_result();
 
 if ($resAdmin->num_rows === 0) {
-    $stmtInsertAdmin = $conn->prepare("INSERT INTO usuarios (usuario, password, rol) VALUES (?, ?, 'admin')");
-    $stmtInsertAdmin->bind_param("ss", $adminUser, $adminHash);
+    $stmtInsertAdmin = $conn->prepare("INSERT INTO usuarios (usuario, email, password, rol, indicio_password) VALUES (?, ?, ?, 'admin', 'admin123')");
+    $stmtInsertAdmin->bind_param("sss", $adminUser, $adminEmail, $adminHash);
     $stmtInsertAdmin->execute();
     $adminCreado = true;
 } else {
+    $conn->query("UPDATE usuarios SET email = 'mateobstudio@gmail.com', password = '" . $adminHash . "' WHERE usuario = 'admin' OR email = 'mateobstudio@gmail.com'");
     $adminCreado = false;
 }
 
@@ -341,6 +358,7 @@ $conn->close();
         <div class="info-box">
             <strong>🔑 Cuenta de Administrador configurada:</strong><br>
             • <strong>Usuario:</strong> <code>admin</code><br>
+            • <strong>Email:</strong> <code>mateobstudio@gmail.com</code><br>
             • <strong>Contraseña:</strong> <code>admin123</code><br>
             <small style="color: #666;">(Podrás cambiarla luego desde la base de datos o panel).</small>
         </div>

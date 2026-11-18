@@ -1989,6 +1989,9 @@ menuLogin.addEventListener(
 
     cerrarMenu();
 
+    const hintBox = document.getElementById("login-hint-box");
+    if (hintBox) hintBox.style.display = "none";
+
 
     abrirModal(
       loginModal
@@ -2048,6 +2051,11 @@ menuRegister.addEventListener(
     document.getElementById(
       "reg-pass"
     ).value = "";
+
+    if (document.getElementById("reg-email")) document.getElementById("reg-email").value = "";
+    if (document.getElementById("reg-pregunta")) document.getElementById("reg-pregunta").value = "";
+    if (document.getElementById("reg-respuesta")) document.getElementById("reg-respuesta").value = "";
+    if (document.getElementById("reg-indicio")) document.getElementById("reg-indicio").value = "";
 
 
     abrirModal(
@@ -2136,6 +2144,10 @@ registerConfirm.addEventListener(
         "reg-user"
       ).value.trim();
 
+    const email =
+      document.getElementById("reg-email")
+      ? document.getElementById("reg-email").value.trim()
+      : "";
 
     const password =
       document.getElementById(
@@ -2155,6 +2167,27 @@ registerConfirm.addEventListener(
     }
 
 
+    if (!email) {
+
+      mostrarNotificacion(
+        "Por favor, escribí tu correo electrónico.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      mostrarNotificacion(
+        "Ingresá un correo electrónico válido (ej: usuario@gmail.com).",
+        "error"
+      );
+      return;
+    }
+
+
     if (!password) {
 
       mostrarNotificacion(
@@ -2166,6 +2199,24 @@ registerConfirm.addEventListener(
 
     }
 
+
+    // Validar pregunta y respuesta de seguridad
+    const pregunta = document.getElementById("reg-pregunta").value;
+    const respuestaSeg = document.getElementById("reg-respuesta").value.trim();
+
+    if (!pregunta) {
+      mostrarNotificacion("Elegí una pregunta de seguridad para poder recuperar tu contraseña.", "error");
+      return;
+    }
+
+    if (!respuestaSeg) {
+      mostrarNotificacion("Escribí una respuesta para tu pregunta de seguridad.", "error");
+      return;
+    }
+
+
+    // Indicio de contraseña opcional
+    const indicio = document.getElementById("reg-indicio") ? document.getElementById("reg-indicio").value.trim() : "";
 
     const turnstileInput =
       document.querySelector(
@@ -2204,8 +2255,12 @@ registerConfirm.addEventListener(
         },
         body: JSON.stringify({
           usuario: usuario,
+          email: email,
           password: password,
-          token: token
+          token: token,
+          pregunta: pregunta,
+          respuesta: respuestaSeg,
+          indicio: indicio
         })
       });
 
@@ -2227,7 +2282,13 @@ registerConfirm.addEventListener(
       cerrarModal(registerModal);
 
       document.getElementById("reg-user").value = "";
+      if (document.getElementById("reg-email")) document.getElementById("reg-email").value = "";
       document.getElementById("reg-pass").value = "";
+      document.getElementById("reg-pregunta").value = "";
+      document.getElementById("reg-respuesta").value = "";
+      if (document.getElementById("reg-indicio")) {
+        document.getElementById("reg-indicio").value = "";
+      }
 
       await actualizarEstadoUsuario();
     } catch (error) {
@@ -2281,6 +2342,20 @@ loginConfirm.addEventListener("click", async event => {
     if (!resultado.success) {
       mostrarNotificacion(resultado.message || "Usuario o contraseña incorrectos.", "error");
 
+      // Mostrar indicio si falló varias veces
+      if (resultado.password_invalida && resultado.mostrar_indicio) {
+        const hintBox = document.getElementById("login-hint-box");
+        const hintText = document.getElementById("login-hint-text");
+        if (hintBox && hintText) {
+          if (resultado.indicio) {
+            hintText.innerHTML = `&ldquo;<strong>${resultado.indicio}</strong>&rdquo;`;
+          } else {
+            hintText.innerHTML = `<em>No guardaste una pista al registrarte. Podés restablecer tu contraseña con tu pregunta secreta.</em>`;
+          }
+          hintBox.style.display = "block";
+        }
+      }
+
       if (resultado.no_existe) {
         setTimeout(() => {
           if (confirm("El usuario '" + usuario + "' no está registrado. ¿Querés abrir el formulario de registro ahora?")) {
@@ -2292,6 +2367,9 @@ loginConfirm.addEventListener("click", async event => {
       }
       return;
     }
+
+    const hintBoxSuccess = document.getElementById("login-hint-box");
+    if (hintBoxSuccess) hintBoxSuccess.style.display = "none";
 
     mostrarNotificacion(resultado.message, "success");
     cerrarModal(loginModal);
@@ -2313,6 +2391,340 @@ loginConfirm.addEventListener("click", async event => {
     loginConfirm.textContent = "Ingresar";
   }
 });
+
+
+
+// ==================================================
+// RECUPERAR CONTRASEÑA (OPCIÓN 2: CÓDIGO AL CORREO + PREGUNTA ALTERNATIVA)
+// ==================================================
+
+const recuperarModal =
+  document.getElementById("recuperar-modal");
+
+const openRecuperar =
+  document.getElementById("open-recuperar");
+
+const closeRecuperar =
+  document.getElementById("close-recuperar");
+
+const recuperarBuscar =
+  document.getElementById("recuperar-buscar");
+
+const recuperarConfirmar =
+  document.getElementById("recuperar-confirmar");
+
+const hintOpenRecuperar =
+  document.getElementById("hint-open-recuperar");
+
+const recuperarReenviar =
+  document.getElementById("recuperar-reenviar");
+
+const recuperarIrPregunta =
+  document.getElementById("recuperar-ir-pregunta");
+
+const recuperarConfirmarPregunta =
+  document.getElementById("recuperar-confirmar-pregunta");
+
+const recuperarVolverCodigo =
+  document.getElementById("recuperar-volver-codigo");
+
+
+function resetearModalRecuperacion(usuarioActual = "") {
+  document.getElementById("recuperar-user").value = usuarioActual;
+  const paso1 = document.getElementById("recuperar-paso1");
+  const paso2 = document.getElementById("recuperar-paso2");
+  const pasoPregunta = document.getElementById("recuperar-paso-pregunta");
+
+  if (paso1) paso1.style.display = "block";
+  if (paso2) paso2.style.display = "none";
+  if (pasoPregunta) pasoPregunta.style.display = "none";
+
+  const codInput = document.getElementById("recuperar-codigo");
+  if (codInput) codInput.value = "";
+  const nuevaPassInput = document.getElementById("recuperar-nueva-pass");
+  if (nuevaPassInput) nuevaPassInput.value = "";
+  const respInput = document.getElementById("recuperar-respuesta");
+  if (respInput) respInput.value = "";
+  const passPreguntaInput = document.getElementById("recuperar-nueva-pass-pregunta");
+  if (passPreguntaInput) passPreguntaInput.value = "";
+}
+
+function abrirRecuperacionDesdeLogin(event) {
+  if (event) event.preventDefault();
+  const usuarioActual = document.getElementById("login-user") ? document.getElementById("login-user").value.trim() : "";
+  cerrarModal(loginModal);
+
+  resetearModalRecuperacion(usuarioActual);
+  abrirModal(recuperarModal);
+}
+
+// Abrir modal de recuperación desde los links del login
+if (openRecuperar) {
+  openRecuperar.addEventListener("click", abrirRecuperacionDesdeLogin);
+}
+
+if (hintOpenRecuperar) {
+  hintOpenRecuperar.addEventListener("click", abrirRecuperacionDesdeLogin);
+}
+
+// Cerrar modal de recuperación
+if (closeRecuperar) {
+  closeRecuperar.addEventListener("click", event => {
+    event.preventDefault();
+    cerrarModal(recuperarModal);
+  });
+}
+
+
+// PASO 1: Enviar código de 6 dígitos al correo
+if (recuperarBuscar) {
+  recuperarBuscar.addEventListener("click", async event => {
+    event.preventDefault();
+
+    const identificador = document.getElementById("recuperar-user").value.trim();
+
+    if (!identificador) {
+      mostrarNotificacion("Ingresá tu correo o nombre de usuario.", "error");
+      return;
+    }
+
+    recuperarBuscar.disabled = true;
+    recuperarBuscar.textContent = "Enviando código...";
+
+    try {
+      const respuesta = await fetch("auth_recuperar.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "enviar_codigo",
+          identificador: identificador
+        })
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!resultado.success) {
+        mostrarNotificacion(resultado.message, "error");
+        return;
+      }
+
+      mostrarNotificacion(resultado.message, "success");
+
+      // Mostrar email ofuscado y pasar al paso 2
+      const emailDestinoEl = document.getElementById("recuperar-email-destino");
+      if (emailDestinoEl) emailDestinoEl.textContent = resultado.email_ofuscado;
+
+      document.getElementById("recuperar-paso1").style.display = "none";
+      document.getElementById("recuperar-paso2").style.display = "block";
+      const pasoPregunta = document.getElementById("recuperar-paso-pregunta");
+      if (pasoPregunta) pasoPregunta.style.display = "none";
+
+      const codInput = document.getElementById("recuperar-codigo");
+      if (codInput) codInput.focus();
+
+      if (resultado.codigo_debug) {
+        console.log("Código de prueba generado:", resultado.codigo_debug);
+      }
+
+    } catch (error) {
+      console.error(error);
+      mostrarNotificacion("Error al intentar enviar el código.", "error");
+    } finally {
+      recuperarBuscar.disabled = false;
+      recuperarBuscar.textContent = "Enviar código a mi correo ✉️";
+    }
+  });
+}
+
+
+// PASO 2: Verificar código y restablecer contraseña
+if (recuperarConfirmar) {
+  recuperarConfirmar.addEventListener("click", async event => {
+    event.preventDefault();
+
+    const identificador = document.getElementById("recuperar-user").value.trim();
+    const codigo = document.getElementById("recuperar-codigo") ? document.getElementById("recuperar-codigo").value.trim() : "";
+    const nuevaPass = document.getElementById("recuperar-nueva-pass") ? document.getElementById("recuperar-nueva-pass").value : "";
+
+    if (!codigo) {
+      mostrarNotificacion("Ingresá el código de 6 dígitos que te enviamos.", "error");
+      return;
+    }
+
+    if (codigo.length < 6) {
+      mostrarNotificacion("El código debe tener 6 dígitos.", "error");
+      return;
+    }
+
+    if (!nuevaPass) {
+      mostrarNotificacion("Escribí una nueva contraseña.", "error");
+      return;
+    }
+
+    if (nuevaPass.length < 4) {
+      mostrarNotificacion("La contraseña debe tener al menos 4 caracteres.", "error");
+      return;
+    }
+
+    recuperarConfirmar.disabled = true;
+    recuperarConfirmar.textContent = "Restableciendo...";
+
+    try {
+      const resp = await fetch("auth_recuperar.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "restablecer_con_codigo",
+          identificador: identificador,
+          codigo: codigo,
+          nueva_password: nuevaPass
+        })
+      });
+
+      const resultado = await resp.json();
+
+      if (!resultado.success) {
+        mostrarNotificacion(resultado.message, "error");
+        return;
+      }
+
+      mostrarNotificacion(resultado.message, "success");
+      cerrarModal(recuperarModal);
+
+      // Abrir login para iniciar sesión con la nueva contraseña
+      setTimeout(() => {
+        document.getElementById("login-user").value = identificador;
+        abrirModal(loginModal);
+      }, 600);
+
+    } catch (error) {
+      console.error(error);
+      mostrarNotificacion("Error de conexión al restablecer la contraseña.", "error");
+    } finally {
+      recuperarConfirmar.disabled = false;
+      recuperarConfirmar.textContent = "Restablecer contraseña";
+    }
+  });
+}
+
+
+// Reenviar código
+if (recuperarReenviar) {
+  recuperarReenviar.addEventListener("click", event => {
+    event.preventDefault();
+    if (recuperarBuscar) recuperarBuscar.click();
+  });
+}
+
+
+// Ir a pregunta de seguridad (alternativa)
+if (recuperarIrPregunta) {
+  recuperarIrPregunta.addEventListener("click", async event => {
+    event.preventDefault();
+
+    const identificador = document.getElementById("recuperar-user").value.trim();
+    if (!identificador) {
+      mostrarNotificacion("Ingresá primero tu usuario o correo en el campo de texto.", "error");
+      return;
+    }
+
+    try {
+      const respuesta = await fetch("auth_recuperar.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "obtener_pregunta",
+          identificador: identificador
+        })
+      });
+
+      const resultado = await respuesta.json();
+      if (!resultado.success) {
+        mostrarNotificacion(resultado.message, "error");
+        return;
+      }
+
+      document.getElementById("recuperar-pregunta-texto").textContent = "🔒 " + resultado.pregunta;
+      document.getElementById("recuperar-paso1").style.display = "none";
+      const paso2 = document.getElementById("recuperar-paso2");
+      if (paso2) paso2.style.display = "none";
+      document.getElementById("recuperar-paso-pregunta").style.display = "block";
+
+    } catch (e) {
+      console.error(e);
+      mostrarNotificacion("Error al buscar la pregunta de seguridad.", "error");
+    }
+  });
+}
+
+
+// Confirmar cambio con pregunta secreta
+if (recuperarConfirmarPregunta) {
+  recuperarConfirmarPregunta.addEventListener("click", async event => {
+    event.preventDefault();
+
+    const identificador = document.getElementById("recuperar-user").value.trim();
+    const respuesta = document.getElementById("recuperar-respuesta").value.trim();
+    const nuevaPass = document.getElementById("recuperar-nueva-pass-pregunta").value;
+
+    if (!respuesta) {
+      mostrarNotificacion("Escribí tu respuesta de seguridad.", "error");
+      return;
+    }
+
+    if (!nuevaPass || nuevaPass.length < 4) {
+      mostrarNotificacion("La contraseña debe tener al menos 4 caracteres.", "error");
+      return;
+    }
+
+    recuperarConfirmarPregunta.disabled = true;
+    recuperarConfirmarPregunta.textContent = "Procesando...";
+
+    try {
+      const resp = await fetch("auth_recuperar.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "restablecer",
+          identificador: identificador,
+          respuesta: respuesta,
+          nueva_password: nuevaPass
+        })
+      });
+
+      const resultado = await resp.json();
+      if (!resultado.success) {
+        mostrarNotificacion(resultado.message, "error");
+        return;
+      }
+
+      mostrarNotificacion(resultado.message, "success");
+      cerrarModal(recuperarModal);
+
+      setTimeout(() => {
+        document.getElementById("login-user").value = identificador;
+        abrirModal(loginModal);
+      }, 600);
+
+    } catch (e) {
+      console.error(e);
+      mostrarNotificacion("Error al restablecer la contraseña.", "error");
+    } finally {
+      recuperarConfirmarPregunta.disabled = false;
+      recuperarConfirmarPregunta.textContent = "Cambiar contraseña";
+    }
+  });
+}
+
+
+// Volver al código por correo
+if (recuperarVolverCodigo) {
+  recuperarVolverCodigo.addEventListener("click", event => {
+    event.preventDefault();
+    document.getElementById("recuperar-paso-pregunta").style.display = "none";
+    document.getElementById("recuperar-paso1").style.display = "block";
+  });
+}
 
 
 
@@ -2434,6 +2846,18 @@ window.addEventListener(
 
     }
 
+
+    if (
+      event.target ===
+      recuperarModal
+    ) {
+
+      cerrarModal(
+        recuperarModal
+      );
+
+    }
+
   }
 );
 
@@ -2467,6 +2891,11 @@ document.addEventListener(
 
       cerrarModal(
         registerModal
+      );
+
+
+      cerrarModal(
+        recuperarModal
       );
 
     }

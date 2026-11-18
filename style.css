@@ -33,7 +33,7 @@ body {
   text-align: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 3000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -53,6 +53,8 @@ body {
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 12px;
+  max-width: calc(100% - 130px);
+  z-index: 10;
   transition: transform 0.25s ease, filter 0.25s ease;
   line-height: 1;
 }
@@ -1334,7 +1336,10 @@ body {
 ================================================== */
 
 #login-confirm,
-#register-confirm {
+#register-confirm,
+#recuperar-buscar,
+#recuperar-confirmar,
+#recuperar-confirmar-pregunta {
   width: 100%;
 
   padding: 10px;
@@ -1357,9 +1362,294 @@ body {
 }
 
 #login-confirm:hover,
-#register-confirm:hover {
+#register-confirm:hover,
+#recuperar-buscar:hover,
+#recuperar-confirmar:hover,
+#recuperar-confirmar-pregunta:hover {
   background: #6F1D2A;
   transform: translateY(-1px);
+}
+
+
+
+/* ==================================================
+   PREGUNTA DE SEGURIDAD (REGISTRO)
+================================================== */
+
+.security-select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+
+  border:
+    1px solid #D98A8A;
+
+  border-radius: 8px;
+
+  font-family:
+    'Poppins', sans-serif;
+
+  font-size: 14px;
+
+  background: white;
+  color: #3B151B;
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border 0.2s ease,
+    box-shadow 0.2s ease;
+
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238B2635' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 35px;
+}
+
+.security-select:focus {
+  border-color: #8B2635;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(139,38,53,0.1);
+}
+
+
+
+/* ==================================================
+   LINK OLVIDASTE CONTRASEÑA
+================================================== */
+
+.forgot-password-link {
+  text-align: center;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.forgot-password-link a {
+  color: #8B2635;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link a:hover {
+  color: #C94C5A;
+  text-decoration: underline;
+}
+
+
+
+/* ==================================================
+   MODAL RECUPERAR CONTRASEÑA
+================================================== */
+
+.recuperar-instruccion {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.recuperar-pregunta {
+  background: #FFE1DD;
+  color: #8B2635;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.codigo-info-badge {
+  background: #EAF7EC;
+  border: 1px solid #B8E4C0;
+  color: #1E6633;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+}
+
+.codigo-info-badge strong {
+  color: #144924;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.codigo-input {
+  font-size: 20px !important;
+  letter-spacing: 6px !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  color: #8B2635 !important;
+  background: #FFF8F7 !important;
+  border: 2px dashed #8B2635 !important;
+  padding: 12px !important;
+}
+
+.recuperar-alt-opcion {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #666;
+}
+
+.recuperar-alt-opcion a {
+  color: #8B2635;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-left: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.recuperar-alt-opcion a:hover {
+  color: #C94C5A;
+}
+
+
+
+/* ==================================================
+   EXPLICACIÓN Y BANNERS DE SEGURIDAD (REGISTRO)
+================================================== */
+
+.registro-seguridad-banner {
+  background: #FFF0ED;
+  border-left: 3px solid #8B2635;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 12px 0 10px;
+  text-align: left;
+}
+
+.seguridad-banner-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8B2635;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.seguridad-banner-desc {
+  font-size: 11.5px;
+  color: #555;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.registro-indicio-banner {
+  background: #FDF4E3;
+  border-left: 3px solid #D4A017;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 8px;
+  text-align: left;
+}
+
+.indicio-banner-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7D5A00;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.indicio-banner-desc {
+  font-size: 11.5px;
+  color: #665200;
+  line-height: 1.45;
+  margin: 0 0 8px 0;
+}
+
+.registro-indicio-banner input {
+  margin-bottom: 0;
+  background: #FFFFFF;
+}
+
+
+
+/* ==================================================
+   INDICIO DE CONTRASEÑA EN LOGIN (INTENTOS FALLIDOS)
+================================================== */
+
+.login-hint-box {
+  background: #FFF8E6;
+  border: 1.5px dashed #D4A017;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  text-align: left;
+  animation: fadeInHint 0.3s ease;
+}
+
+@keyframes fadeInHint {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-hint-box .hint-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #8A6400;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.login-hint-box .hint-text {
+  font-size: 13px;
+  color: #3B151B;
+  background: #FFFFFF;
+  border: 1px solid #EED79D;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.login-hint-box .hint-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: #777;
+  padding-top: 4px;
+}
+
+.login-hint-box .hint-footer a {
+  color: #8B2635;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.login-hint-box .hint-footer a:hover {
+  color: #C94C5A;
 }
 
 
@@ -2472,14 +2762,21 @@ body {
     transition: all 0.2s ease !important;
 }
 
-.add-btn:hover, .buy-btn:hover, #login-confirm:hover, #register-confirm:hover {
+.add-btn:hover, .buy-btn:hover, #login-confirm:hover, #register-confirm:hover, #recuperar-confirmar:hover, #recuperar-buscar:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(139, 38, 53, 0.35);
 }
 
-.menu-btn:hover, .cart-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+.menu-btn:hover {
+    transform: translateY(-50%) scale(1.05) !important;
+    background: #6F1D2A !important;
+    box-shadow: 0 4px 12px rgba(139, 38, 53, 0.35) !important;
+}
+
+.cart-btn:hover {
+    transform: translateY(-50%) scale(1.05) !important;
+    background: #6F1D2A !important;
+    box-shadow: 0 4px 12px rgba(139, 38, 53, 0.35) !important;
 }
 
 .menu-item {
@@ -2492,15 +2789,15 @@ body {
 }
 
 .favorite-btn:hover {
-    transform: scale(1.2);
+    transform: scale(1.08);
 }
 
 .toggle-pass:hover {
-    transform: scale(1.15);
+    transform: scale(1.06);
 }
 
 .modal-close:hover {
-    transform: scale(1.2);
+    transform: scale(1.06);
     color: #E96B6B;
 }
 
@@ -2511,7 +2808,7 @@ body {
 .quantity-controls button:hover {
     background: #6F1D2A;
     color: white;
-    transform: scale(1.15);
+    transform: scale(1.06);
 }
 
 /* ==================================================

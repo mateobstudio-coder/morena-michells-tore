@@ -12,6 +12,9 @@ $datos = json_decode(file_get_contents("php://input"), true);
 $usuario = isset($datos["usuario"]) ? trim($datos["usuario"]) : "";
 $password = isset($datos["password"]) ? $datos["password"] : "";
 $token = isset($datos["token"]) ? $datos["token"] : "";
+$pregunta = isset($datos["pregunta"]) ? trim($datos["pregunta"]) : "";
+$respuesta = isset($datos["respuesta"]) ? trim($datos["respuesta"]) : "";
+$indicio = isset($datos["indicio"]) ? trim($datos["indicio"]) : "";
 
 if (empty($usuario) || empty($password)) {
     echo json_encode([
@@ -85,8 +88,13 @@ $stmtCheck->close();
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 $rol = "cliente";
 
-$stmtInsert = $conexion->prepare("INSERT INTO usuarios (usuario, password, rol) VALUES (?, ?, ?)");
-$stmtInsert->bind_param("sss", $usuario, $passwordHash, $rol);
+// Guardar pregunta, respuesta de seguridad e indicio
+$preguntaVal = !empty($pregunta) ? $pregunta : null;
+$respuestaVal = !empty($respuesta) ? $respuesta : null;
+$indicioVal = !empty($indicio) ? $indicio : null;
+
+$stmtInsert = $conexion->prepare("INSERT INTO usuarios (usuario, password, rol, pregunta_seguridad, respuesta_seguridad, indicio_password) VALUES (?, ?, ?, ?, ?, ?)");
+$stmtInsert->bind_param("ssssss", $usuario, $passwordHash, $rol, $preguntaVal, $respuestaVal, $indicioVal);
 
 if ($stmtInsert->execute()) {
     $nuevoId = $stmtInsert->insert_id;
